@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Registered Users</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Registered Users</h1>
+  <button style="margin-bottom: 20px;" id="download-csv">Download as a csv file</button>
+  <table>
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Gender</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="user-list"></tbody>
+  </table>
+
+  <script>
+    // AJAX request to fetch users
+    function fetchUsers(page = 1, sortBy = 'username', search = '') {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `/user/all-users?page=${page}&sortBy=${sortBy}&search=${search}`, true);
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          const users = JSON.parse(xhr.responseText);
+
+          // Clear existing list
+          const userList = document.getElementById('user-list');
+          userList.innerHTML = '';
+
+          // Generate HTML for each user
+          users.data.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${user.id}</td>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.phone}</td>
+              <td>${user.gender}</td>
+              <td>${user.status}</td>
+            `;
+            userList.appendChild(row);
+          });
+        } else {
+          console.error('Failed to fetch user details');
+        }
+      };
+      xhr.send();
+    }
+
+    // Initial fetch
+    fetchUsers();
+
+    // // Pagination handling
+    // document.addEventListener('click', function (event) {
+    //   if (event.target.matches('.pagination-link')) {
+    //     const page = event.target.dataset.page;
+    //     fetchUsers(page);
+    //   }
+    // });
+
+    // // Sorting handling
+    // document.getElementById('sort-by').addEventListener('change', function (event) {
+    //   const sortBy = event.target.value;
+    //   fetchUsers(1, sortBy);
+    // });
+
+    // // Search handling
+    // document.getElementById('search-form').addEventListener('submit', function (event) {
+    //   event.preventDefault();
+    //   const searchInput = document.getElementById('search-input');
+    //   const search = searchInput.value;
+    //   fetchUsers(1, 'username', search);
+    // });
+
+    // CSV download handling
+    document.getElementById('download-csv').addEventListener('click', function () {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', '/user/users-csv', true);
+      xhr.responseType = 'blob';
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          const blob = new Blob([xhr.response], { type: 'text/csv' });
+          const downloadLink = document.createElement('a');
+          downloadLink.href = window.URL.createObjectURL(blob);
+          downloadLink.download = 'users.csv';
+          downloadLink.click();
+        } else {
+          console.error('Failed to download user list as CSV');
+        }
+      };
+      xhr.send();
+    });
+  </script>
+</body>
+</html>
